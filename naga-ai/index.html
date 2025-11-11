@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAGA.AI - Rude AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #000;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #7f1d1d;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-black text-red-500 font-mono">
+    <!-- Background -->
+    <div class="fixed inset-0 opacity-5">
+        <div class="absolute inset-0 bg-gradient-to-br from-red-900 via-black to-red-900"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="relative border-b-2 border-red-900 bg-gradient-to-r from-black via-red-950 to-black">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <svg class="text-red-600" width="40" height="40" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/>
+                    </svg>
+                    <div>
+                        <h1 class="text-4xl font-bold text-red-500 tracking-wider">NAGA.AI</h1>
+                        <p class="text-red-700 text-sm mt-1">⚠️ Sabse rude AI assistant - Handle at your own risk</p>
+                    </div>
+                </div>
+                <button onclick="clearChat()" class="px-4 py-2 bg-red-900 hover:bg-red-800 text-red-100 rounded border border-red-700 transition-all flex items-center gap-2 hover:scale-105 transform">
+                    🗑️ Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="relative max-w-4xl mx-auto px-4 py-6">
+        <!-- Chat Container -->
+        <div class="bg-gradient-to-b from-red-950/20 to-black border-2 border-red-900 rounded-lg shadow-2xl shadow-red-900/50 overflow-hidden">
+            <!-- Messages -->
+            <div id="messages" class="h-[500px] overflow-y-auto p-6 space-y-4 scrollbar-thin">
+                <div class="flex justify-start animate-fadeIn">
+                    <div class="max-w-[80%] p-4 rounded-lg bg-black border-2 border-red-700 text-red-400 shadow-lg shadow-red-900/30">
+                        <div class="text-xs font-bold mb-1 opacity-70 tracking-wider">💀 NAGA</div>
+                        <div class="whitespace-pre-wrap leading-relaxed">Aye! I'm Naga. Kyu gandmari halat mein ghoom raha hai? Bol kya chahiye?</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="border-t-2 border-red-900 bg-black p-4">
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        id="userInput"
+                        placeholder="Type your message... if you dare 💀"
+                        class="flex-1 px-4 py-3 bg-red-950/30 border-2 border-red-800 rounded text-red-300 placeholder-red-900 focus:outline-none focus:border-red-600 transition-all"
+                        onkeypress="handleKeyPress(event)"
+                    />
+                    <button
+                        onclick="sendMessage()"
+                        id="sendBtn"
+                        class="px-6 py-3 bg-red-700 hover:bg-red-600 text-white rounded font-bold transition-all flex items-center gap-2 hover:scale-105 transform"
+                    >
+                        ➤ Send
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning Footer -->
+        <div class="mt-6 p-4 bg-red-950/30 border border-red-900 rounded text-center">
+            <p class="text-red-700 text-sm">
+                ⚠️ <strong>WARNING:</strong> This AI uses extremely vulgar language and is intentionally offensive.
+                Not suitable for everyone. Use at your own risk. 18+ only.
+            </p>
+        </div>
+
+        <!-- Credit Footer -->
+        <div class="mt-4 text-center text-red-900 text-xs">
+            <p>Powered by Gemini AI • Made with chaos 🔥</p>
+        </div>
+    </div>
+
+    <script>
+        let isLoading = false;
+
+        function addMessage(role, text) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`;
+
+            const isUser = role === 'user';
+            messageDiv.innerHTML = `
+                <div class="max-w-[80%] p-4 rounded-lg ${
+                    isUser
+                        ? 'bg-red-900/50 border border-red-800 text-red-200'
+                        : 'bg-black border-2 border-red-700 text-red-400 shadow-lg shadow-red-900/30'
+                }">
+                    <div class="text-xs font-bold mb-1 opacity-70 tracking-wider">
+                        ${isUser ? '👤 YOU' : '💀 NAGA'}
+                    </div>
+                    <div class="whitespace-pre-wrap leading-relaxed">${text}</div>
+                </div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showLoading() {
+            const messagesDiv = document.getElementById('messages');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading';
+            loadingDiv.className = 'flex justify-start animate-fadeIn';
+            loadingDiv.innerHTML = `
+                <div class="bg-black border-2 border-red-700 text-red-400 p-4 rounded-lg">
+                    <div class="flex gap-2">
+                        <div class="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-red-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        <div class="w-2 h-2 bg-red-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                    </div>
+                </div>
+            `;
+            messagesDiv.appendChild(loadingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) loading.remove();
+        }
+
+        async function callNagaAPI(message) {
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                return data.response || "Bhosdina, kuch gadbad ho gayi. Server pe problem hai!";
+            } catch (error) {
+                console.error('API Error:', error);
+                return "Madarchod! Server down hai kya? Error aa raha hai!";
+            }
+        }
+
+        async function sendMessage() {
+            if (isLoading) return;
+
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+            isLoading = true;
+
+            addMessage('user', message);
+            showLoading();
+
+            const response = await callNagaAPI(message);
+
+            hideLoading();
+            addMessage('naga', response);
+
+            input.disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            isLoading = false;
+            input.focus();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function clearChat() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `
+                <div class="flex justify-start animate-fadeIn">
+                    <div class="max-w-[80%] p-4 rounded-lg bg-black border-2 border-red-700 text-red-400 shadow-lg shadow-red-900/30">
+                        <div class="text-xs font-bold mb-1 opacity-70 tracking-wider">💀 NAGA</div>
+                        <div class="whitespace-pre-wrap leading-relaxed">Aye! I'm Naga. Kyu gandmari halat mein ghoom raha hai? Bol kya chahiye?</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Focus input on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('userInput').focus();
+        });
+    </script>
+</body>
+</html>
